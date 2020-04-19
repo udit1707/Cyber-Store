@@ -1,12 +1,14 @@
 //const products=[]; we now use models
 const Product=require('../models/product');
+const Order=require('../models/order');
 // const Cart =require('../models/cart');
 // const Order=require('../models/order');
 
  exports.getProducts= (req,res, next)=>{
     //using sequelize package
-    Product.fetchAll()
+    Product.find()
     .then(products=>{
+      console.log(products);
       res.render('shop/product-list',{prods:products, pageTitle:'All Products',path:'/products' /*,hasProducts: products.length > 0, activeShop : true , productCSS:true*/ });
 
     })
@@ -77,7 +79,7 @@ const Product=require('../models/product');
 
 exports.getIndex=(req,res,next)=>{
 
-  Product.fetchAll()
+  Product.find()
   .then(products=>{
    
     res.render('shop/index',{
@@ -117,14 +119,28 @@ exports.getIndex=(req,res,next)=>{
 
  exports.getCart=(req,res,next)=>{
  
-   return req.user.getCart()
-   .then(products=>{
+   req.user.populate('cart.items.productId')
+   .execPopulate()
+   .then(user=>{
+     console.log(user.cart.items);
+     const products=user.cart.items;
     res.render('shop/cart',{path:'/cart',
-           pageTitle:'Your Cart',
-           products: products
-         });
+             pageTitle:'Your Cart',
+             products: products
+           });
    })
    .catch(err=>{console.log(err);});
+
+
+
+  //Using Mongodb  return req.user.getCart()
+  //  .then(products=>{
+  //   res.render('shop/cart',{path:'/cart',
+  //          pageTitle:'Your Cart',
+  //          products: products
+  //        });
+  //  })
+  //  .catch(err=>{console.log(err);});
 
 
 // USING SEQUELIZE req.user.getCart()
@@ -225,11 +241,15 @@ exports.postCartDeleteProduct=(req,res,next)=>{
    const prodId=req.body.productId;
    Product.findById(prodId)
    .then(product=>{
+     console.log(product);
      return req.user.deleteCartItem(product).
      then(result=>{
+       console.log(result);
       res.redirect('/cart');
-     });
-   });
+     })
+     .catch(err=>{console.log(err);});
+   })
+   .catch(err=>{console.log(err);});;
 //   req.user.getCart()
 //   .then(cart=>{
 //     return cart.getProducts({where:{id:prodId}})
@@ -254,12 +274,43 @@ exports.postCartDeleteProduct=(req,res,next)=>{
 };
 
 exports.postOrder=(req,res,next)=>{
-
-req.user.addOrder()
-.then(result=>{
-  res.redirect('/orders');
+/*mongoose version*/
+req.user.populate('cart.items.productId')
+   .execPopulate()
+   .then(user=>{
+     const products=user.cart.items.map(i=>{
+       return {product:{...i.productId._doc},quantity:i.quantity}
+     });
+    const order=new Order({
+    products:products,
+  user:{
+    name:req.user.name,
+    userId:req.user
+  }});
+  return order.save();
 })
-.catch(err=>{console.log(err);});
+.then(result=>{
+  req.user.clearCart()
+  .then(result=>{
+    res.redirect('/orders');
+  });
+  
+})
+.catch(err=>{console.log(err);})
+
+
+
+
+
+
+
+
+
+// using mongodb req.user.addOrder()
+// .then(result=>{
+//   res.redirect('/orders');
+// })
+// .catch(err=>{console.log(err);});
 
 
 //  USING SEQUELIZE   let fetchedCart;   
@@ -289,15 +340,28 @@ req.user.addOrder()
 
 exports.getOrders = (req, res, next) => {
      
-      req.user.getOrders()
-      .then(orders=>{
-        res.render('shop/orders', {
+  Order.find({'user.userId':req.user})
+  .then(orders=>{
+    console.log(orders);
+    res.render('shop/orders', {
                   path: '/orders',
                   pageTitle: 'Your Orders',
                   orders: orders
                 });
-      })
-      .catch(err => console.log(err));
+    
+  })
+  .catch(err => console.log(err));
+     
+  
+  // USing Mongodb req.user.getOrders()
+      // .then(orders=>{
+      //   res.render('shop/orders', {
+      //             path: '/orders',
+      //             pageTitle: 'Your Orders',
+      //             orders: orders
+      //           });
+      // })
+      // .catch(err => console.log(err));
 
 
   //   USING SEQUELIZEreq.user

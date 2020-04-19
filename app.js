@@ -2,10 +2,11 @@
 // function rqListener(req,res){
 const express=require('express'); 
 const bodyParser=require('body-parser');
+const mongoose=require('mongoose');
 const app=express();
 const path=require('path');
 const errorController=require('./controllers/error');
-const mongoConnect=require('./util/database').mongoConnect;
+// const mongoConnect=require('./util/database').mongoConnect;
 const User=require('./models/user');
 
 /* SQL IMPORTS
@@ -44,11 +45,13 @@ const shopRoutes=require('./routes/shop');
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static(path.join(__dirname,'public')));
 app.use((req,res,next)=>{
-    User.findById('5e9c131b1c9d440000661541')
+    User.findById('5e9c8e85d0920364edc38374')
     .then(user=>{
         // console.log('USer Found');
         // console.log(user);
-        req.user=new User(user.name,user.email,user.cart,user._id);
+        //mongodb  req.user=new User(user.name,user.email,user.cart,user._id);
+        /*mongoose*/ 
+        req.user=user;
         next();
     })
     .catch(err=>{console.log(err);});
@@ -72,9 +75,27 @@ app.use(errorController.getErrorPage);
  const server=http.createServer(app);
  server.listen(3001); alternative line */
 
- mongoConnect(()=>{
-      app.listen(3005);
- });
+mongoose.connect('mongodb+srv://uditsingh294:udit1998@cluster0-aqzf0.mongodb.net/shop?retryWrites=true&w=majority')
+.then((result)=>{
+    User.findOne().then(user=>{
+        if(!user){
+            const user=new User({
+                name:'Udit',
+                email:'udittest@gmail.com',
+                cart:{items:[]}
+            });
+            user.save();
+         }
+    });  
+    app.listen(3005);
+})
+.catch(err=>{
+    console.log(err);
+});
+
+//  mongoConnect(()=>{
+//       app.listen(3005);
+//  });
 
  
  
