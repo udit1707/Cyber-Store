@@ -5,7 +5,13 @@ const bodyParser=require('body-parser');
 const app=express();
 const path=require('path');
 const errorController=require('./controllers/error');
-//const db=require('./util/database');
+const mongoConnect=require('./util/database').mongoConnect;
+const User=require('./models/user');
+
+/* SQL IMPORTS
+
+//Non-SEQUELIZE const db=require('./util/database');
+
 const sequelize=require('./util/database');
 const Product=require('./models/product');
 const User=require('./models/user');
@@ -14,7 +20,7 @@ const CartItem=require('./models/cart-item');
 const Order=require('./models/order');
 const OrderItem=require('./models/order-item');
 
-/*
+
 to use handlebars as template engine
 
 const expressHbs=require('express-handlebars');
@@ -38,12 +44,15 @@ const shopRoutes=require('./routes/shop');
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static(path.join(__dirname,'public')));
 app.use((req,res,next)=>{
-    User.findByPk(1)
+    User.findById('5e9c131b1c9d440000661541')
     .then(user=>{
-        req.user=user;
+        // console.log('USer Found');
+        // console.log(user);
+        req.user=new User(user.name,user.email,user.cart,user._id);
         next();
     })
     .catch(err=>{console.log(err);});
+   
 });
 
 app.use('/admin',adminRoutes);
@@ -61,46 +70,83 @@ app.use(errorController.getErrorPage);
 
 /*Alternative is given below using 'app'.
  const server=http.createServer(app);
- server.listen(3001); alternative line 
+ server.listen(3001); alternative line */
 
- */
+ mongoConnect(()=>{
+      app.listen(3005);
+ });
 
-Product.belongsTo(User, { constraints: true, onDelete: 'CASCADE' });
-/*optional line just to make things more clear*/
-User.hasMany(Product);
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ /* MYSQL using SEQUELIZE DATABASE IMPLEMENTATION */
 
-User.hasOne(Cart);
-/*optional line just to make things more clear*/
-Cart.belongsTo(User);
+// Product.belongsTo(User, { constraints: true, onDelete: 'CASCADE' });
+// /*optional line just to make things more clear*/
+// User.hasMany(Product);
 
-Cart.belongsToMany(Product, { through: CartItem });
-//Many-Many Relationship here b/w cart and product
-/*optional line just to make things more clear*/
-Product.belongsToMany(Cart, { through: CartItem });
+// User.hasOne(Cart);
+// /*optional line just to make things more clear*/
+// Cart.belongsTo(User);
 
-Order.belongsTo(User);
-User.hasMany(Order);
+// Cart.belongsToMany(Product, { through: CartItem });
+// //Many-Many Relationship here b/w cart and product
+// /*optional line just to make things more clear*/
+// Product.belongsToMany(Cart, { through: CartItem });
 
-Order.belongsToMany(Product, { through: OrderItem });
+// Order.belongsTo(User);
+// User.hasMany(Order);
+
+// Order.belongsToMany(Product, { through: OrderItem });
 
 
- sequelize.
- //sync({force:true}).
- sync().
- then(result=>{
-     return User.findByPk(1);  })
- .then(user=>{
-     if(!user){
-        return User.create({name:'Udit',email:'udittest@gmail.com'});
-     }
-     return user;//returning a value in 'then' block is automatically wrapped into a new promise.
- })
- .then(user=>{
-     //console.log(user);
-     return user.createCart();
+//  sequelize.
+//  //sync({force:true}).
+//  sync().
+//  then(result=>{
+//      return User.findByPk(1);  })
+//  .then(user=>{
+//      if(!user){
+//         return User.create({name:'Udit',email:'udittest@gmail.com'});
+//      }
+//      return user;//returning a value in 'then' block is automatically wrapped into a new promise.
+//  })
+//  .then(user=>{
+//      //console.log(user);
+//      return user.createCart();
      
 
- })
- .then((cart)=>{app.listen(3005);}) 
- //console.log(result);
-    .catch(err=>{console.log(err);}); 
+//  })
+//  .then((cart)=>{app.listen(3005);}) 
+//  //console.log(result);
+//     .catch(err=>{console.log(err);}); 
