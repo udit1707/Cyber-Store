@@ -1,9 +1,18 @@
 //const http = require('http');
 // function rqListener(req,res){
+    const MONGODB_URI='mongodb+srv://uditsingh294:udit1998@cluster0-aqzf0.mongodb.net/shop?retryWrites=true&w=majority';
 const express=require('express'); 
 const bodyParser=require('body-parser');
 const mongoose=require('mongoose');
+const session=require('express-session');
+const MongoDBStore=require('connect-mongodb-session')(session);
+const csrf=require('csurf');
 const app=express();
+const flash=require('connect-flash');
+const store=new MongoDBStore({
+    uri:MONGODB_URI,
+    collection:'sessions'
+});
 const path=require('path');
 const errorController=require('./controllers/error');
 // const mongoConnect=require('./util/database').mongoConnect;
@@ -29,11 +38,14 @@ app.engine('hbs',expressHbs({layoutsDir:'views/layouts/', defaultLayout:'main-la
 app.set('view engine','hbs');*/
 
 //to use pug as an template engine app.set('view engine','pug');
+const csrfProtection=csrf();
+
 app.set('view engine','ejs');
 app.set('views', 'views');
 
 const adminRoutes=require('./routes/admin');
 const shopRoutes=require('./routes/shop');
+const authRoutes=require('./routes/auth');
 
 //testing mysql code.
 //db.execute('SELECT * FROM products')
@@ -44,8 +56,19 @@ const shopRoutes=require('./routes/shop');
 
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static(path.join(__dirname,'public')));
+
+app.use(session({secret:'my secret'
+,resave:false
+,saveUninitialized:false
+,store:store
+}));
+app.use(csrfProtection);
+app.use(flash());
 app.use((req,res,next)=>{
-    User.findById('5e9c8e85d0920364edc38374')
+    if(!req.session.user){
+        return next();
+    }
+    User.findById(req.session.user._id)
     .then(user=>{
         // console.log('USer Found');
         // console.log(user);
@@ -57,10 +80,16 @@ app.use((req,res,next)=>{
     .catch(err=>{console.log(err);});
    
 });
+app.use((req,res,next)=>{
+    res.locals.isAuthenticated=req.session.isLoggedIn;
+    res.locals.csrfToken=req.csrfToken();
+    next();
+});
 
 app.use('/admin',adminRoutes);
 
 app.use(shopRoutes);
+app.use(authRoutes);
 
 app.use(errorController.getErrorPage);
 
@@ -75,18 +104,18 @@ app.use(errorController.getErrorPage);
  const server=http.createServer(app);
  server.listen(3001); alternative line */
 
-mongoose.connect('mongodb+srv://uditsingh294:udit1998@cluster0-aqzf0.mongodb.net/shop?retryWrites=true&w=majority')
+mongoose.connect(MONGODB_URI)
 .then((result)=>{
-    User.findOne().then(user=>{
-        if(!user){
-            const user=new User({
-                name:'Udit',
-                email:'udittest@gmail.com',
-                cart:{items:[]}
-            });
-            user.save();
-         }
-    });  
+    // User.findOne().then(user=>{
+    //     if(!user){
+    //         const user=new User({
+    //             email:'udittest@gmail.com',
+    //             password:'abcdef',
+    //             cart:{items:[]}
+    //         });
+    //         user.save();
+    //      }
+    // });  
     app.listen(3005);
 })
 .catch(err=>{

@@ -4,8 +4,10 @@ const ObjectId=mongodb.ObjectId;
 exports.getAddProduct=(req,res, next)=>{
   
     // res.sendFile(path.join(rootDir,'views','add-product.html'));
-     res.render('admin/edit-product',{pageTitle:'Add Product',path:'/admin/add-product',editing:false});  
-   };
+   
+     res.render('admin/edit-product',{pageTitle:'Add Product',path:'/admin/add-product',editing:false, isAuthenticated:req.session.isLoggedIn});  
+   
+    };
 
 exports.postAddProduct=   (req,res,next)=>{
     const title=req.body.title;
@@ -13,7 +15,7 @@ exports.postAddProduct=   (req,res,next)=>{
     const price=req.body.price;
     const description=req.body.description;
     const product=new Product({title:title,price:price,imageUrl:imageUrl,description:description,
-      userId:req.user._id //optional
+      userId:req.user //optional
       //userId:req.user mongoose version it automatically picks up user._id using req.user 
     });
     product.save()
@@ -67,7 +69,8 @@ exports.postAddProduct=   (req,res,next)=>{
            {pageTitle:'Edit Product',
            path:'/admin/edit-product',
            editing: editMode,
-           product:product
+           product:product,
+           isAuthenticated:req.session.isLoggedIn
           
           });
     })
@@ -159,7 +162,8 @@ exports.getProducts=(req,res,next)=>{
    .then(products=>{
     res.render('admin/products',{
               prods:products ,
-              pageTitle:'Admin Products',path:'/admin/products'  /*,
+              pageTitle:'Admin Products',path:'/admin/products',
+              isAuthenticated:req.session.isLoggedIn  /*,
               hasProducts: products.length > 0,
              activeShop : true , productCSS:true */  });
    })
