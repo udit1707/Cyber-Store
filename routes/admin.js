@@ -1,6 +1,8 @@
 const express=require('express');
 // for html files const path=require('path');
 const router=express.Router();
+const{check,body} =require('express-validator');
+
 //leaner way of using path.join when sending htmlFiles const rootDir =require('../util/path');
 const products=[];
 const adminController=require('../controllers/admin');
@@ -13,11 +15,31 @@ router.get('/add-product', isAuth,adminController.getAddProduct);
 router.get('/products',isAuth,adminController.getProducts);
 
 // // /admin/add-product => POST    
-router.post('/add-product',isAuth,adminController.postAddProduct);
+router.post('/add-product',[check('title','Title can only contain alphabhets and numbers and minimum 3 characters').isString().isLength({min:3}).trim(),
+check('imageUrl')
+.isURL().withMessage('Enter a valid image URL'),
+check('price')
+.isFloat().
+withMessage('Enter a valid Price'),
+check('description')
+.isString()
+.isLength({min:5,max:400})
+.withMessage('The description should contain aleast 5 characters and atmost 400')
+],isAuth,adminController.postAddProduct);
 
 router.get('/edit-product/:productId',isAuth,adminController.getEditProduct);
 
-router.post('/edit-product',isAuth,adminController.postEditProduct);
+router.post('/edit-product',[check('title','Title can only contain alphabhets and numbers and minimum 3 characters').isString().isLength({min:3}).trim(),
+check('imageUrl')
+.isURL().withMessage('Enter a valid image URL'),
+check('price')
+.isFloat().
+withMessage('Enter a valid Price'),
+check('description')
+.isString()
+.isLength({min:5,max:400})
+.withMessage('The description should contain atleast 5 characters and atmost 400')
+],isAuth,adminController.postEditProduct);
 
 router.post('/delete-product',isAuth,adminController.postDeleteProduct);
 

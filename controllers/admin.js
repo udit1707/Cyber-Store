@@ -1,11 +1,20 @@
 const Product=require('../models/product');
 const mongodb=require('mongodb');
 const ObjectId=mongodb.ObjectId;
+const {validationResult}=require('express-validator/check');
+
 exports.getAddProduct=(req,res, next)=>{
   
     // res.sendFile(path.join(rootDir,'views','add-product.html'));
    
-     res.render('admin/edit-product',{pageTitle:'Add Product',path:'/admin/add-product',editing:false, isAuthenticated:req.session.isLoggedIn});  
+     res.render('admin/edit-product',{pageTitle:'Add Product',path:'/admin/add-product'
+     ,editing:false,
+     errorMessage:null,
+
+      isAuthenticated:req.session.isLoggedIn,
+      hasError:false,
+      validationErrors:[]
+    });  
    
     };
 
@@ -14,10 +23,26 @@ exports.postAddProduct=   (req,res,next)=>{
     const imageUrl=req.body.imageUrl;
     const price=req.body.price;
     const description=req.body.description;
+    const errors=validationResult(req);
+if(!errors.isEmpty()){
+  console.log(errors.array());
+  return res.status(422).render(
+    'admin/edit-product',{pageTitle:'Add Product'
+    ,path:'/admin/add-product'
+    ,editing:false, 
+    hasError:true,
+    errorMessage:errors.array()[0].msg,
+
+    isAuthenticated:req.session.isLoggedIn,
+    product:{title:title,imageUrl:imageUrl,price:price,description:description}, 
+    validationErrors:errors.array()} 
+
+  );}
     const product=new Product({title:title,price:price,imageUrl:imageUrl,description:description,
       userId:req.user //optional
       //userId:req.user mongoose version it automatically picks up user._id using req.user 
     });
+    
     product.save()
     .then(result=>{
       console.log(result);
@@ -69,8 +94,11 @@ exports.postAddProduct=   (req,res,next)=>{
            {pageTitle:'Edit Product',
            path:'/admin/edit-product',
            editing: editMode,
+           hasError:false,
            product:product,
-           isAuthenticated:req.session.isLoggedIn
+           isAuthenticated:req.session.isLoggedIn,
+           errorMessage:null,
+           validationErrors:[]
           
           });
     })
@@ -115,20 +143,40 @@ exports.postAddProduct=   (req,res,next)=>{
      const updatedPrice=req.body.price;
      const updatedImageUrl=req.body.imageUrl;
      const updatedDesc=req.body.description;
+     const errors=validationResult(req);
+if(!errors.isEmpty()){
+  console.log(errors.array());
+  return res.status(422).render(
+    'admin/edit-product',{pageTitle:'Edit Product'
+    ,path:'/admin/edit-product'
+    ,editing:true,
+    hasError:true
+    ,errorMessage:errors.array()[0].msg,
+    isAuthenticated:req.session.isLoggedIn,
+    product:{_id:prodId,title:updatetdTitle,
+    imageUrl:updatedImageUrl,
+  price:updatedPrice,
+description:updatedDesc},
+     validationErrors:errors.array()
+  }
+
+  );}     
+
      //USING MONGOOSE MONOGODB
      Product.findById(prodId)
      .then(product=>{
+      
        if(product.userId.toString()!==req.user._id.toString())
           {return res.redirect('/');}
        product.title=updatetdTitle;
        product.price=updatedPrice;
        product.imageUrl=updatedImageUrl;
        product.description=updatedDesc;
-       return product.save() .then(result=>{console.log('UPDATED PRODUCT');
-       res.redirect('/admin/products');
-     });
-     })
-    
+       return product.save().then(result=>{console.log('UPDATED PRODUCT');
+       res.redirect('/admin/products');}).catch(err=>{console.log(err);});   
+       
+     
+     }) 
           .catch(err=>{console.log(err);});    
      // USING MONGODB const updatedProd=new Product(updatetdTitle,updatedPrice,updatedImageUrl,updatedDesc,new ObjectId(prodId));
     //  updatedProd.save()

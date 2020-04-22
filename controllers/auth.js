@@ -2,6 +2,7 @@ const crypto=require('crypto');
 const bcrypt=require('bcryptjs');
 const nodemailer=require('nodemailer');
 const sendgridTransport=require('nodemailer-sendgrid-transport');
+const {validationResult}=require('express-validator/check');
 const User=require('../models/user');
 const transporter=nodemailer.createTransport(sendgridTransport({
   auth:{
@@ -23,13 +24,13 @@ message=null;
 res.render('auth/login', {
                     path: '/login',
                     pageTitle: 'Login Page',
-                    errorMessage:message
+                    errorMessage:message,
+                    oldInput:{email:"",password:""},
+                    validationErrors:[]
                   });
                 }
-
-
-                exports.getSignup = (req, res, next) => {
-                  let message=req.flash('error');
+exports.getSignup = (req, res, next) => {
+let message=req.flash('error');
 if(message.length>0)
 {
   message=message[0];
@@ -39,7 +40,11 @@ message=null;
                   res.render('auth/signup', {
                     path: '/signup',
                     pageTitle: 'Signup',
-                    errorMessage:message
+                    errorMessage:message,
+                    oldInput:{email:"",
+                  pasword:"",
+                confirmPassword:""},
+                validationErrors:[]
                   });
                 };    
 
@@ -47,6 +52,18 @@ message=null;
 /* Adding Auth by email */
 const email=req.body.email;
 const password=req.body.password;
+const errors=validationResult(req);
+if(!errors.isEmpty()){
+  console.log(errors.array());
+  return res.status(422).render('auth/login', {
+   path: '/login',
+   pageTitle: 'Login Page',
+   errorMessage:errors.array()[0].msg,
+   oldInput:{email:email,password:password},
+   validationErrors:errors.array() 
+
+  });
+}
 User.findOne({email:email})
 .then(user=>{
   if(!user){
@@ -96,11 +113,18 @@ User.findOne({email:email})
      const email=req.body.email;
      const password=req.body.password;
      const confirmPassword=req.body.confirmPassword;
-     
-     User.findOne({email:email})
-     .then(userDoc=>{
-       if(!userDoc){
-         return bcrypt.hash(password,12)
+     const errors=validationResult(req);
+     if(!errors.isEmpty()){
+       console.log(errors.array());
+       return res.status(422).render('auth/signup', {
+        path: '/signup',
+        pageTitle: 'Signup',
+        errorMessage:errors.array()[0].msg,
+        oldInput:{email:email,password:password,confirmPassword:confirmPassword},
+        validationErrors:errors.array() 
+       });
+     }
+          bcrypt.hash(password,12)
          .then(hashedPassword=>{
                 
           const user=new User({
@@ -122,18 +146,9 @@ User.findOne({email:email})
           })
           .catch(err=>{console.log(err);});
  
-         });
-         
-        
-       }
-       else
-       {req.flash('error','Email EXISTS!!');
-         return res.redirect('/signup');}
-     })
-     .catch(err=>{console.log(err);});
-
+         })             
+       .catch(err=>{console.log(err);});
  };
-
 
  exports.postLogout=(req,res,next)=>{
    req.session.destroy((err)=>{
