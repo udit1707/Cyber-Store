@@ -118,15 +118,17 @@ exports.postAddProduct=   (req,res,next)=>{
      //USING MONGOOSE MONOGODB
      Product.findById(prodId)
      .then(product=>{
+       if(product.userId.toString()!==req.user._id.toString())
+          {return res.redirect('/');}
        product.title=updatetdTitle;
        product.price=updatedPrice;
        product.imageUrl=updatedImageUrl;
        product.description=updatedDesc;
-       product.save();
+       return product.save() .then(result=>{console.log('UPDATED PRODUCT');
+       res.redirect('/admin/products');
+     });
      })
-     .then(result=>{console.log('UPDATED PRODUCT');
-            res.redirect('/admin/products');
-          })
+    
           .catch(err=>{console.log(err);});    
      // USING MONGODB const updatedProd=new Product(updatetdTitle,updatedPrice,updatedImageUrl,updatedDesc,new ObjectId(prodId));
     //  updatedProd.save()
@@ -156,7 +158,7 @@ exports.postAddProduct=   (req,res,next)=>{
 
 exports.getProducts=(req,res,next)=>{
 
-   Product.find()
+   Product.find({userId:req.user._id})
    // .select('title price -_id')
    // .populate('userId','name')
    .then(products=>{
@@ -200,8 +202,10 @@ exports.getProducts=(req,res,next)=>{
  
     const prodId=req.body.productId;
   //USING MONGOOSE
-  Product.findByIdAndRemove(prodId)
-    .then((result=>{ res.redirect('/admin/products');}))
+  Product.deleteOne({_id:prodId,userId:req.user._id})
+    .then((result=>{ 
+      console.log('DESTROYED PRODUCT');
+      res.redirect('/admin/products');}))
     .catch(err=>{console.log(err);});
   }
   
