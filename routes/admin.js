@@ -16,8 +16,6 @@ router.get('/products',isAuth,adminController.getProducts);
 
 // // /admin/add-product => POST    
 router.post('/add-product',[check('title','Title can only contain alphabhets and numbers and minimum 3 characters').isString().isLength({min:3}).trim(),
-check('imageUrl')
-.isURL().withMessage('Enter a valid image URL'),
 check('price')
 .isFloat().
 withMessage('Enter a valid Price'),
@@ -30,8 +28,6 @@ check('description')
 router.get('/edit-product/:productId',isAuth,adminController.getEditProduct);
 
 router.post('/edit-product',[check('title','Title can only contain alphabhets and numbers and minimum 3 characters').isString().isLength({min:3}).trim(),
-check('imageUrl')
-.isURL().withMessage('Enter a valid image URL'),
 check('price')
 .isFloat().
 withMessage('Enter a valid Price'),

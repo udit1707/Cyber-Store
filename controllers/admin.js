@@ -1,6 +1,6 @@
 const Product=require('../models/product');
 const mongodb=require('mongodb');
-const ObjectId=mongodb.ObjectId;
+const fileHelper=require('../util/file');
 const {validationResult}=require('express-validator/check');
 
 exports.getAddProduct=(req,res, next)=>{
@@ -20,12 +20,27 @@ exports.getAddProduct=(req,res, next)=>{
 
 exports.postAddProduct=   (req,res,next)=>{
     const title=req.body.title;
-    const imageUrl=req.body.imageUrl;
+    const image=req.file;
     const price=req.body.price;
     const description=req.body.description;
+    if(!image){
+      return res.status(422).render(
+        'admin/edit-product',{pageTitle:'Add Product'
+        ,path:'/admin/add-product'
+        ,editing:false, 
+        hasError:true,
+        errorMessage:'Attached file is not supported',
+    
+        isAuthenticated:req.session.isLoggedIn,
+        product:{title:title,price:price,description:description}, 
+        validationErrors:[]
+      }
+      );
+    }
+    
     const errors=validationResult(req);
-if(!errors.isEmpty()){
-  console.log(errors.array());
+
+    if(!errors.isEmpty()){
   return res.status(422).render(
     'admin/edit-product',{pageTitle:'Add Product'
     ,path:'/admin/add-product'
@@ -34,10 +49,11 @@ if(!errors.isEmpty()){
     errorMessage:errors.array()[0].msg,
 
     isAuthenticated:req.session.isLoggedIn,
-    product:{title:title,imageUrl:imageUrl,price:price,description:description}, 
+    product:{title:title,price:price,description:description}, 
     validationErrors:errors.array()} 
 
   );}
+    const imageUrl=image.path;
     const product=new Product({title:title,price:price,imageUrl:imageUrl,description:description,
       userId:req.user //optional
       //userId:req.user mongoose version it automatically picks up user._id using req.user 
@@ -48,7 +64,27 @@ if(!errors.isEmpty()){
       console.log(result);
       res.redirect('/admin/products');
     })
-    .catch(err=>{console.log(err)});
+    .catch(err=>{
+      // return res.status(500).render(
+      //   'admin/edit-product',{pageTitle:'Add Product'
+      //   ,path:'/admin/add-product'
+      //   ,editing:false, 
+      //   hasError:true,
+      //   errorMessage:'Database Operation failed, please try again. ',
+    
+      //   isAuthenticated:req.session.isLoggedIn,
+      //   product:{title:title,imageUrl:imageUrl,price:price,description:description}, 
+      //   validationErrors:[]} 
+
+      const error=new Error(err);
+      error.httpStatusCode=500;
+      return next(error);
+      
+    }
+      );
+      
+      
+    
  
 
   // using SEQUELIZE in mysql  
@@ -141,12 +177,14 @@ if(!errors.isEmpty()){
      const prodId=req.body.productId;
      const updatetdTitle=req.body.title;
      const updatedPrice=req.body.price;
-     const updatedImageUrl=req.body.imageUrl;
+     const updatedImage=req.file;
      const updatedDesc=req.body.description;
+    let imageUrl;
+     
      const errors=validationResult(req);
-if(!errors.isEmpty()){
-  console.log(errors.array());
-  return res.status(422).render(
+ 
+     if(!errors.isEmpty()){
+    return res.status(422).render(
     'admin/edit-product',{pageTitle:'Edit Product'
     ,path:'/admin/edit-product'
     ,editing:true,
@@ -154,8 +192,7 @@ if(!errors.isEmpty()){
     ,errorMessage:errors.array()[0].msg,
     isAuthenticated:req.session.isLoggedIn,
     product:{_id:prodId,title:updatetdTitle,
-    imageUrl:updatedImageUrl,
-  price:updatedPrice,
+     price:updatedPrice,
 description:updatedDesc},
      validationErrors:errors.array()
   }
@@ -165,19 +202,32 @@ description:updatedDesc},
      //USING MONGOOSE MONOGODB
      Product.findById(prodId)
      .then(product=>{
-      
+         if(!updatedImage)
+         {
+           imageUrl=product.imageUrl;
+         }
+         else{
+           fileHelper.deleteFile(product.imageUrl);
+           imageUrl=updatedImage.path;
+         }      
+ 
        if(product.userId.toString()!==req.user._id.toString())
           {return res.redirect('/');}
        product.title=updatetdTitle;
        product.price=updatedPrice;
-       product.imageUrl=updatedImageUrl;
+       product.imageUrl=imageUrl;
        product.description=updatedDesc;
        return product.save().then(result=>{console.log('UPDATED PRODUCT');
        res.redirect('/admin/products');}).catch(err=>{console.log(err);});   
        
      
      }) 
-          .catch(err=>{console.log(err);});    
+          .catch(err=>{
+            console.log(err);
+            const error=new Error(err);
+      error.httpStatusCode=500;
+      return next(error);
+    });    
      // USING MONGODB const updatedProd=new Product(updatetdTitle,updatedPrice,updatedImageUrl,updatedDesc,new ObjectId(prodId));
     //  updatedProd.save()
     //  .then(result=>{console.log('UPDATED PRODUCT');
@@ -250,11 +300,21 @@ exports.getProducts=(req,res,next)=>{
  
     const prodId=req.body.productId;
   //USING MONGOOSE
-  Product.deleteOne({_id:prodId,userId:req.user._id})
-    .then((result=>{ 
+  Product.findById(prodId)
+  .then((product)=>{
+    if(!product)
+    {return next(new Error('Product not found!'));}
+    fileHelper.deleteFile(product.imageUrl);
+    return Product.deleteOne({_id:prodId,userId:req.user._id})
+  })
+ .then((result=>{ 
       console.log('DESTROYED PRODUCT');
       res.redirect('/admin/products');}))
-    .catch(err=>{console.log(err);});
+    .catch(err=>{console.log(err);
+      const error=new Error(err);
+      error.httpStatusCode=500;
+      return next(error);
+    });
   }
   
     // USING MONGODB  Product.deleteById(prodId)

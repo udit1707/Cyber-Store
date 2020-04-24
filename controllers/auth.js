@@ -6,7 +6,7 @@ const {validationResult}=require('express-validator/check');
 const User=require('../models/user');
 const transporter=nodemailer.createTransport(sendgridTransport({
   auth:{
-    api_key:null/*enter the api key*/
+    api_key:/*enter the api key*/
   }
 }));
 exports.getLogin = (req, res, next) => {
@@ -87,7 +87,11 @@ User.findOne({email:email})
     .catch(err=>{return res.redirect('/login')});
   
 })
-.catch(err=>{console.log(err);});
+.catch(err=>{console.log(err);
+  const error=new Error(err);
+      error.httpStatusCode=500;
+      return next(error);
+});
 
 
 
@@ -147,7 +151,11 @@ User.findOne({email:email})
           .catch(err=>{console.log(err);});
  
          })             
-       .catch(err=>{console.log(err);});
+       .catch(err=>{console.log(err);
+        const error=new Error(err);
+      error.httpStatusCode=500;
+      return next(error);
+      });
  };
 
  exports.postLogout=(req,res,next)=>{
@@ -203,7 +211,11 @@ exports.postReset=(req,res,next)=>{
         `    
        });          
     })
-    .catch(err=>{console.log(err);});
+    .catch(err=>{console.log(err);
+      const error=new Error(err);
+      error.httpStatusCode=500;
+      return next(error);
+    });
   });
 
 };
@@ -253,7 +265,11 @@ exports.getNewPassword=(req,res,next)=>{
          .then(result=>{
            res.redirect('/login');
          })
-         .catch(err=>{console.log(err);});
+         .catch(err=>{console.log(err);
+          const error=new Error(err);
+      error.httpStatusCode=500;
+      return next(error);
+        });
        
    
   };
