@@ -37,7 +37,11 @@ check('description')
 .withMessage('The description should contain atleast 5 characters and atmost 400')
 ],isAuth,adminController.postEditProduct);
 
-router.post('/delete-product',isAuth,adminController.postDeleteProduct);
+// router.post('/delete-product',isAuth,adminController.postDeleteProduct);
+
+router.delete('/product/:productId',isAuth,adminController.deleteProduct); //client side http delete async request
+
+
 
 // exports.products=products;
 // exports.routes=router;
