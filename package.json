@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_ENV=production MONGO_USER = uditsingh294 MONGO_PASSWORD = udit1998  MONGO_DEFAULT_DATABASE=shop STRIPE_KEY=sk_test_8uAkAno9IKWHNkROHdnixxeo00wOQhGlxL SENDGRID_KEY=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 node app.js",
+    "start": "NODE_ENV=production MONGO_USER = uditsingh294 MONGO_PASSWORD = //enter password  MONGO_DEFAULT_DATABASE=shop STRIPE_KEY=//enter stripe api SENDGRID_KEY=//enter sendgrid_api node app.js",
     "start-server": "node app.js",
     "start:dev": "nodemon app.js"
   },
