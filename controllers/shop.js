@@ -3,6 +3,7 @@ const path=require('path');
 const Product=require('../models/product');
 const Order=require('../models/order');
 const stripe=require('stripe')(
+  process.env.STRIPE_KEY
 //add secret key provided by stripe
 );
 const fs=require('fs');

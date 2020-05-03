@@ -1,6 +1,8 @@
 //const http = require('http');
 // function rqListener(req,res){
-    const MONGODB_URI='mongodb+srv://uditsingh294:udit1998@cluster0-aqzf0.mongodb.net/shop?retryWrites=true&w=majority';
+const fs=require('fs');
+const https=require('https');
+const MONGODB_URI=`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0-aqzf0.mongodb.net/${process.env.MONGO_DEFAULT_DATABASE}?retryWrites=true&w=majority`;
 const express=require('express'); 
 const bodyParser=require('body-parser');
 const mongoose=require('mongoose');
@@ -17,6 +19,9 @@ const path=require('path');
 const errorController=require('./controllers/error');
 // const mongoConnect=require('./util/database').mongoConnect;
 const User=require('./models/user');
+const helmet=require('helmet');
+const compression=require('compression');
+const morgan=require('morgan');
 const multer=require('multer');
 
 /* SQL IMPORTS
@@ -40,6 +45,10 @@ app.set('view engine','hbs');*/
 
 //to use pug as an template engine app.set('view engine','pug');
 const csrfProtection=csrf();
+
+// const privateKey=fs.readFileSync('serverkey');
+// const certificate=fs.readFileSync('server.cert');
+
 const fileStorage=multer.diskStorage({
     destination:(req,file,cb)=>{
         cb(null,'images');
@@ -70,6 +79,11 @@ const authRoutes=require('./routes/auth');
 //     console.log(result[0],result[1]);
 // })
 // .catch((err)=>{console.log(err);});
+const accessLogStream=fs.createWriteStream(path.join(__dirname,'access.log'),{flags:'a'});
+
+app.use(helmet());
+app.use(compression());
+app.use(morgan('combined',{stream:accessLogStream}));
 
 app.use(bodyParser.urlencoded({extended:true})); 
 app.use(multer({storage:fileStorage, fileFilter:fileFilter}).single('image'));
@@ -152,7 +166,10 @@ mongoose.connect(MONGODB_URI)
     //         user.save();
     //      }
     // });  
-    app.listen(3005);
+    // https
+    // .createServer({key:privateKey,cert:certificate},app)
+    // .listen(process.env.PORT || 3000 );
+    app.listen(process.env.PORT || 3000 );
 })
 .catch(err=>{
     console.log(err);

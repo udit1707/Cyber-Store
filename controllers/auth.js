@@ -6,7 +6,8 @@ const {validationResult}=require('express-validator/check');
 const User=require('../models/user');
 const transporter=nodemailer.createTransport(sendgridTransport({
   auth:{
-    api_key:null/*enter the api key*/
+    api_key: process.env.SENDGRID_KEY
+    /*enter the api key*/
   }
 }));
 exports.getLogin = (req, res, next) => {
