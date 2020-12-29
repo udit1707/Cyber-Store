@@ -12,7 +12,8 @@ This Online-Retail website offers one-stop-All solution for resellers and consum
 ## CLOUD
 - AWS' Simple Storage Service
 - Heroku Deployment
-
+## Recommender 
+- Check [here](https://github.com/udit1707/Cyber-Store-Recommends)
 ## Landing
 
 ![Landing](https://user-images.githubusercontent.com/43987867/103312269-8388a700-4a42-11eb-9c71-635f8c4f5ede.gif)
