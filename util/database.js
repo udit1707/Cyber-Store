@@ -7,7 +7,7 @@ let _db;
 
 const mongoConnect=(callback)=>{
 
-MongoClient.connect('mongodb+srv://uditsingh294:udit1998@cluster0-aqzf0.mongodb.net/shop?retryWrites=true&w=majority')
+MongoClient.connect('process.env.{Enter your env variable}')
 .then((client)=>{
     console.log(client);
     _db=client.db();

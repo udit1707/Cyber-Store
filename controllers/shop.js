@@ -1,18 +1,23 @@
 //const products=[]; we now use models
+require('dotenv').config();
 const path=require('path');
 const Product=require('../models/product');
+const ProductS=require('../modelsSQL/product');
 const Order=require('../models/order');
 const stripe=require('stripe')(
-  process.env.STRIPE_KEY
+  `${process.env.STRIPE_KEY}`
 //add secret key provided by stripe
 );
 const fs=require('fs');
 const PDFDocument=require('pdfkit');
-const ITEMS_PER_PAGE=2;
+const USER= require('../modelsSQL/user');
+const Rating=require('../modelsSQL/rating');
+const ProductRating = require('../modelsSQL/product-rating');
+const ITEMS_PER_PAGE=4;
 // const Cart =require('../models/cart');
 // const Order=require('../models/order');
 
- exports.getProducts= (req,res, next)=>{
+exports.getProducts= (req,res, next)=>{
     //using sequelize package
     const page=+req.query.page||1;
  let totalItems;
@@ -58,15 +63,30 @@ const ITEMS_PER_PAGE=2;
     // res.render('shop',{prods:products, pageTitle:'Shop',path:'/',hasProducts: products.length > 0, activeShop : true , productCSS:true });
     };
 
-    exports.getProduct=(req,res,next)=>{
+    exports.getProduct=async(req,res,next)=>{
       const prodId=req.params.productId;
-      console.log(prodId);
-    
-      Product.findById(prodId)
-      .then(product=>{
-        res.render('shop/product-detail',{product:product, pageTitle:'Product Details',path:'/product/prodID', isAuthenticated:req.session.isLoggedIn});
-      })
-      .catch(err=>{console.log(err);});
+      let rating;
+      // console.log(prodId);
+      try{
+      const product=await Product.findById(prodId);
+      const prodS=await ProductS.findOne({where:{mongoId:product._id.toString()}});
+      if(req.user)
+      {
+        const userSQ=await USER.findOne({where:{mongoId:req.user._id.toString()}});
+        const prodRat=await ProductRating.findOne({where:{productId:prodS.id,userId:userSQ.id}});
+        if(prodRat)
+        {
+          const foundRating=await Rating.findByPk(prodRat.ratingId);
+          if(foundRating)
+          rating=foundRating.value;
+        }
+      }
+      // console.log(product._id);
+      res.render('shop/product-detail',{product:product, pageTitle:'Product Details',path:'/product/prodID', isAuthenticated:req.session.isLoggedIn,rating:rating,mean:prodS.mean_rating});
+      }
+      catch(err){
+        console.log(err)
+      }
 
 
     
@@ -100,33 +120,33 @@ const ITEMS_PER_PAGE=2;
       
     }
 
-exports.getIndex=(req,res,next)=>{
-  const page=+req.query.page||1;
- let totalItems;
+// exports.getIndex=(req,res,next)=>{
+//   const page=+req.query.page||1;
+//  let totalItems;
 
-  Product.find().countDocuments().then(numProducts=>{
-    totalItems=numProducts;
-    return Product.find()
-    .skip((page-1)* ITEMS_PER_PAGE)
-    .limit(ITEMS_PER_PAGE); 
-  })  
-  .then(products=>{
+//   Product.find().countDocuments().then(numProducts=>{
+//     totalItems=numProducts;
+//     return Product.find()
+//     .skip((page-1)* ITEMS_PER_PAGE)
+//     .limit(ITEMS_PER_PAGE); 
+//   })  
+//   .then(products=>{
    
-    res.render('shop/index',{
-      prods:products ,
-        pageTitle:'Shop',
-        path:'/',
-        currentPage:page,
-        hasNextPage:ITEMS_PER_PAGE*page<totalItems,
-        hasPreviousPage:page>1,
-        nextPage:page+1,
-        previousPage:page-1,
-        lastPage: Math.ceil(totalItems/ITEMS_PER_PAGE)
+//     res.render('shop/index',{
+//       prods:products ,
+//         pageTitle:'Shop',
+//         path:'/',
+//         currentPage:page,
+//         hasNextPage:ITEMS_PER_PAGE*page<totalItems,
+//         hasPreviousPage:page>1,
+//         nextPage:page+1,
+//         previousPage:page-1,
+//         lastPage: Math.ceil(totalItems/ITEMS_PER_PAGE)
           /*,
       hasProducts: products.length > 0,
-         activeShop : true , productCSS:true */  });
-  })
-  .catch(err=>{console.log(err);});
+  //        activeShop : true , productCSS:true */ 
+  // })
+  // .catch(err=>{console.log(err);});
     
 //  Product.findAll().then(products=>{
 //   console.log('products fetched'); 
@@ -153,7 +173,7 @@ exports.getIndex=(req,res,next)=>{
     
 
 
-};    
+// };    
 
  exports.getCart=(req,res,next)=>{
  
@@ -230,8 +250,8 @@ exports.postCart=(req,res,next)=>{
     return req.user.addToCart(product)
     .then(result=>{
       console.log(result);
-      res.redirect('/products');
-      //res.redirect('/cart');
+      // res.redirect('/products');
+      res.redirect('/cart');
     })
     .catch(err=>{console.log(err);});
  })
@@ -350,13 +370,11 @@ exports.getCheckout=(req,res,next)=>{
      });
   }) 
      .then(session=>{
-       
       res.render('shop/checkout',{path:'/checkout',
       pageTitle:'Checkout',
       products: products,
       totalSum: totalSum,
-      sessionId:session.id
-     });
+      sessionId:session.id});
      })
 .catch(err=>{
   console.log(err);

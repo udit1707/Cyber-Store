@@ -1,54 +1,105 @@
-<%- include('../includes/head.ejs') %>
-    <link rel="stylesheet" href="/css/product.css">
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title><%= pageTitle %></title>
+    <link rel="icon" href="/shopping.ico">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/owl.carousel.css">
+    <link rel="stylesheet" href="/css/recommend.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script> 
+    <link href="https://fonts.googleapis.com/css?family=Josefin+Sans:300,400,700&subset=latin-ext" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/all.css" integrity="sha384-vp86vTRFVJgpjF9jiIGPEEqYqlDwgyBgEF109VFjmqGmIY/Y4HV4d3Gp2irVfcrp" crossorigin="anonymous">
+    <style>
+        a:link{
+          text-decoration: none!important;
+          cursor: pointer;
+        }
+        </style>
 </head>
 
-<body>
+<body >
+<!-- class="bodyR" style="background-color: #f1f6ff;"> -->
     <%- include('../includes/navigation.ejs') %>
-
-    <main>
-        <% if (prods.length > 0) { %>
-            <div class="grid">
-                <% for (let product of prods) { %>
-                    <article class="card product-item">
-                        <header class="card__header">
-                            <h1 class="product__title"><%= product.title %></h1>
-                        </header>
-                        <div class="card__image">
-                            <img src="/<%= product.imageUrl %>"
-                                alt="<%= product.title %>">
-                        </div>
-                        <div class="card__content">
-                            <h2 class="product__price">$<%= product.price %></h2>
-                            <p class="product__description"><%= product.description %></p>
-                        </div>
-                        <div class="card__actions">
-                            <a href="/products/<%=product._id%>" class="btn">Details</a>
-                            <% if (isAuthenticated) 
-                            {%>
-                            <%- include('../includes/add-to-cart.ejs',{product:product}) %>
-                            <%}%>                    </article>
-                <% } %>
+<div class="container-fluid">
+    <div class="row">
+      <h1 class="block-title" data-typewriter="CyberStore Trending Now"></h1>
+        <div id="news-slider" class="owl-carousel">
+          <div class="post-slide">
+            <div class="post-img">
+              <img src="<%=prods['image'][0]%>" alt="">
+              <a href="/products/<%=prods['id'][0]%>" class="over-layer"><i class="fa fa-link"></i></a>
             </div>
-           <section class="pagination">
-           <% if(currentPage != 1 && previousPage!=1){%>
-            <a href="/?page=1">1</a><%}%>
-          
-            <% if(hasPreviousPage){%>
-                <a href="/?page=<%=previousPage%>" ><%=previousPage%></a><%}%>
-        
-            <a href="/?page=<%=currentPage%>" class="active"><%=currentPage%></a>
-           
-            <% if(hasNextPage){%>
-           <a href="/?page=<%=nextPage%>" ><%=nextPage%></a><%}%>
-           
+            <div class="post-content">
+              <h3 class="post-title">
+                <a href="/products/<%=prods['id'][0]%>" style="color: #00695c;"><%=prods['name'][0]%>.</a>
+              </h3>
+              <p class="post-description glow" style="color:  #ffeb3b;"><i class="far fa-star"></i>Trending Now (<%=prods['count'][0]%>)</p>
+              <span class="post-date"><i class="fas fa-clock"></i><%=prods['update'][0]%></span>
+              <a href="/products/<%=prods['id'][0]%>" class="read-more">Know More!</a>
+            </div>
+          </div>
+          <%for(let i=1;i < prods['image'].length;i++)
+          {%>
+          <div class="post-slide">
+            <div class="post-img">
+              <img src="<%=prods['image'][i]%>" alt="">
+              <a href="/products/<%=prods['id'][i]%>" class="over-layer"><i class="fa fa-link"></i></a>
+            </div>
+            <div class="post-content">
+              <h3 class="post-title">
+                <a href="/products/<%=prods['id'][i]%>" style="color: #00695c;"><%=prods['name'][i]%></a>
+              </h3>
+              <p class="post-description glow" style="color:  #ffeb3b;"><i class="far fa-star"></i>Trending Now (<%=prods['count'][i]%>)</p>
+              <span class="post-date"><i class="fas fa-clock"></i><%=prods['update'][i]%></span>
+              <a href="/products/<%=prods['id'][i]%>" class="read-more">Know More</a>
+            </div>
+          </div>
+          <%}%>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+<script src="/js/owl.carousel.js"></script>
+<script src="/js/owl.navigation.js"></script>
+<script src="/js/owl.carousel.min.js"></script>
+<script src="/js/owl.autoplay.js"></script>
+<script src="/js/owl.autoheight.js"></script>
+<script src="/js/main.js"></script>
+<script>
+$(document).ready(function() {
+    $("#news-slider").owlCarousel({
+        items : 3,
+        itemsDesktop:[1199,3],
+        itemsDesktopSmall:[980,2],
+        itemsMobile : [600,1],
+        autoplay:true,
+        smartSpeed :900,
+        nav:true,
+        navText : ["<i class='fa fa-angle-left'></i>","<i class='fa fa-angle-right'></i>"],
+        autowidth:true,
+        pagination:true,
+        autoheight:true
+    });
+});
+</script>
+<script>
+  var text = $('.block-title').data("typewriter");
 
-           <% if(currentPage !== lastPage && nextPage !== lastPage ){%>
-           <a href="/?page=<%=lastPage%>" ><%=lastPage%></a><%}%>
-   
-           </section>
+$.each(text.split(''), function(i, letter) {
 
-        <% } else { %>
-            <h1>No Products Found!</h1>
-        <% } %>
-    </main>
-<%- include('../includes/end.ejs') %>
+  setTimeout(function() {
+
+    $('.block-title').html($('.block-title').html() + letter);
+
+  }, 300 * i);
+
+});
+</script>
+</body>
+</html>

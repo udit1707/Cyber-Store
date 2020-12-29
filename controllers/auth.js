@@ -1,9 +1,11 @@
+require('dotenv').config();
 const crypto=require('crypto');
 const bcrypt=require('bcryptjs');
 const nodemailer=require('nodemailer');
 const sendgridTransport=require('nodemailer-sendgrid-transport');
 const {validationResult}=require('express-validator/check');
 const User=require('../models/user');
+const USER=require('../modelsSQL/user');
 const transporter=nodemailer.createTransport(sendgridTransport({
   auth:{
     api_key: process.env.SENDGRID_KEY
@@ -114,7 +116,7 @@ User.findOne({email:email})
     //   .catch(err=>{console.log(err);});
          
  }
- exports.postSignup = (req, res, next) => {
+ exports.postSignup = async(req, res, next) => {
      const email=req.body.email;
      const password=req.body.password;
      const confirmPassword=req.body.confirmPassword;
@@ -129,34 +131,24 @@ User.findOne({email:email})
         validationErrors:errors.array() 
        });
      }
-          bcrypt.hash(password,12)
-         .then(hashedPassword=>{
-                
-          const user=new User({
-            email:email,
-            password:hashedPassword,
-            cart:{items:[]}
-          });
-          user.save()
-          .then(result=>{
-            res.redirect('/login');
-            return transporter.sendMail({
+     try{
+        const hashedPassword=await bcrypt.hash(password,12);
+        const user=new User({email:email,password:hashedPassword,cart:{items:[]}});
+        const result=await user.save();
+        const resultSQ=await USER.create({mongoId:result._id.toString(),email:result.email});
+        res.redirect('/login');
+        return transporter.sendMail({
               to: email,
               from:'uditsingh294@gmail.com',
               subject:'Signup Success',
               html:'<h1>Sign Up Successfull!!</h1>'
-            })          
-            .catch(err=>{console.log(err);});
-            
-          })
-          .catch(err=>{console.log(err);});
- 
-         })             
-       .catch(err=>{console.log(err);
+            });
+      }          
+     catch(err){console.log(err);
         const error=new Error(err);
       error.httpStatusCode=500;
       return next(error);
-      });
+      };
  };
 
  exports.postLogout=(req,res,next)=>{
@@ -208,7 +200,7 @@ exports.postReset=(req,res,next)=>{
         subject:'Password Reset',
         html:`
         <p>You requested a password reset</p>
-        <p>Click this <a href="http://localhost:3005/reset/${token}">link</a> to set a new password</p>
+        <p>Click this <a href="https://cyber-store.herokuapp.com/reset/${token}">link</a> to set a new password</p>
         `    
        });          
     })

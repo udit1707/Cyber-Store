@@ -1,10 +1,16 @@
+<% var auth=isAuthenticated;%>
 <%- include('../includes/head.ejs') %>
-    <link rel="stylesheet" href="/css/product.css">
+    <!-- <link rel="stylesheet" href="/css/product.css"> -->
+    <link rel="stylesheet" href="/css/details.css">
+    <link rel="stylesheet" href="/css/stars.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
     </head>
  
     <body>
         <%- include('../includes/navigation.ejs') %>
-        <main>
+        <!-- <main>
         <div class="grid">
         <article class="card product-item">
             <header class="card__header">
@@ -13,7 +19,7 @@
                 </h1>
             </header>
             <div class="card__image">
-                <img src="/<%= product.imageUrl %>" alt="<%= product.title %>">
+                <img src="<%= product.imageUrl %>" alt="<%= product.title %>">
             </div>
             <div class="card__content">
                 <h2 class="product__price">$
@@ -32,5 +38,72 @@
             </article>
         </div>
 
-    </main>
-    <%- include('../includes/end.ejs') %>
+    </main> -->
+
+    <div id="container">	
+	
+        <div class="product-details">
+            
+        <h1 style="font-family: 'Russo One', sans-serif;"><%=product.title%>    <%=mean.toFixed(1)%>/5.0</h1>
+        <%if(isAuthenticated)
+        {%>
+        <p>
+        <form id="form-id" method="POST" action="/products/<%=product._id%>/ratings">
+            <input type="hidden" name="_csrf" value="<%=csrfToken%>">
+            <span class="star-cb-group" style="display: inline-block;text-align: -webkit-auto;">
+              <input type="radio" id="rating-5" name="rating" value="5"  <%if(rating==5){%><%="checked"%><%}%> onClick="document.getElementById('form-id').submit();" /><label for="rating-5">5</label>
+              <input type="radio" id="rating-4" name="rating" value="4" <%if(rating==4){%><%="checked"%><%}%> onClick="document.getElementById('form-id').submit();" /><label for="rating-4">4</label>
+              <input type="radio" id="rating-3" name="rating" value="3" <%if(rating==3){%><%="checked"%><%}%> onClick="document.getElementById('form-id').submit();"/><label for="rating-3">3</label>
+              <input type="radio" id="rating-2" name="rating" value="2" <%if(rating==2){%><%="checked"%><%}%> onClick="document.getElementById('form-id').submit();"/><label for="rating-2">2</label>
+              <input type="radio" id="rating-1" name="rating" value="1" <%if(rating==1){%><%="checked"%><%}%> onClick="document.getElementById('form-id').submit();"/><label for="rating-1">1</label>
+              <input type="radio" id="rating-0" name="rating" value="0" class="star-cb-clear" onClick="document.getElementById('form-id').submit();"/><label for="rating-0"></label>
+            </span>
+        </form>
+        </p>
+    <%}%>
+      
+    </div>
+        
+    <div class="product-image">
+        
+        <img src="<%=product.imageUrl%>" alt="">
+        
+    
+        <div class="info">
+            <h2> Description</h2>
+            <ul>
+                <%=product.description%>
+            </ul>
+        </div>
+    </div>
+    <div class="control">
+        <form action="/cart" method="POST">
+            <input type="hidden" name="_csrf" value="<%=csrfToken%>">        
+            <input type="hidden" name="productId" value="<%=product._id%>">
+            <button class="btn" id="cartbt" >
+                <span class="price">$<%=product.price%></span>
+                <span class="shopping-cart"><i class="fa fa-shopping-cart" aria-hidden="true"></i></span>
+                <span class="buy">Add to Cart</span>
+            </button>
+        </form>
+     <button style="left:50%;" class="btn">
+        <span >Submit Feedback</span>
+     </button>
+        
+    </div>
+    
+    </div>
+    <script>
+        var login=<%=auth %>
+        document.getElementById ("cartbt").addEventListener ("click", myFunction, false);
+        function myFunction() 
+        {
+            if(!login)
+            {
+                window.alert("Login to access Cart!");
+                document.getElementById ("cartbt").disabled=true;
+                
+            }
+        }   
+    </script>
+<%- include('../includes/end.ejs') %>

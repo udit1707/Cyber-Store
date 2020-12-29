@@ -1,8 +1,12 @@
-//const http = require('http');
-// function rqListener(req,res){
+
+require('dotenv').config();
 const fs=require('fs');
-const https=require('https');
-const MONGODB_URI=`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0-aqzf0.mongodb.net/${process.env.MONGO_DEFAULT_DATABASE}?retryWrites=true&w=majority`;
+const sequelize=require('./util/databaseSql');
+const Product=require('./modelsSQL/product'),
+ProductRating=require('./modelsSQL/product-rating'),
+USER=require('./modelsSQL/user'),
+Rating=require('./modelsSQL/rating');
+const MONGODB_URI=process.env.MONGODB_URI;
 const express=require('express'); 
 const bodyParser=require('body-parser');
 const mongoose=require('mongoose');
@@ -51,7 +55,18 @@ const csrfProtection=csrf();
 
 const fileStorage=multer.diskStorage({
     destination:(req,file,cb)=>{
-        cb(null,'images');
+        fs.exists(path.join(__dirname+'/ImageImport'),exists=>{
+            if(!exists)
+            {
+              fs.mkdir(path.join(__dirname+'/ImageImport'),err=>{
+                if(err)
+                {
+                  res.status(404).json({message:"Folder creation failed"});
+                }
+             });
+            }
+            cb(null,'ImageImport');
+          });
     } ,
     filename:(req,file,cb)=>{ 
         cb(null,new Date().toISOString()+'_'+file.originalname);
@@ -72,6 +87,7 @@ app.set('views', 'views');
 const adminRoutes=require('./routes/admin');
 const shopRoutes=require('./routes/shop');
 const authRoutes=require('./routes/auth');
+const ratingRoutes=require('./routes/ratings');
 
 //testing mysql code.
 //db.execute('SELECT * FROM products')
@@ -132,12 +148,15 @@ app.use((req,res,next)=>{
 app.use('/admin',adminRoutes);
 
 app.use(shopRoutes);
+app.use(ratingRoutes);
 app.use(authRoutes);
 app.use('/500',errorController.get500);
 app.use(errorController.get404);
 
-
-
+Product.belongsTo(USER,{constraints:true,onDelete:'CASCADE'});
+USER.hasMany(Product);
+Product.belongsToMany(Rating,{through:ProductRating});
+USER.hasMany(ProductRating);
 
 // }
 // http.createServer(rqListener);
@@ -150,12 +169,21 @@ app.use(errorController.get404);
  app.use((error,req,res,next)=>{
     // res.status(error.httpStatusCode).render(...);
      //res.redriect('/500');
+     console.log(error);
      res.status(500).render('500',{pageTitle:'Error500',path:'/500'});
 
  });
 
 mongoose.connect(MONGODB_URI)
 .then((result)=>{
+    sequelize.
+    //sync({force:true}).
+    sync().
+    then(result=>{
+     console.log(result);
+     app.listen(process.env.PORT || 3000);
+    });
+
     // User.findOne().then(user=>{
     //     if(!user){
     //         const user=new User({
@@ -169,7 +197,6 @@ mongoose.connect(MONGODB_URI)
     // https
     // .createServer({key:privateKey,cert:certificate},app)
     // .listen(process.env.PORT || 3000 );
-    app.listen(process.env.PORT || 3000 );
 })
 .catch(err=>{
     console.log(err);

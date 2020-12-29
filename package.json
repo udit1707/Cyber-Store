@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "description": "Complete Node.js Guide",
   "main": "app.js",
-  "engines":{
-    "node":"12.16.1"
+  "engines": {
+    "node": "12.16.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_ENV=production MONGO_USER = uditsingh294 MONGO_PASSWORD = //enter password  MONGO_DEFAULT_DATABASE=shop STRIPE_KEY=//enter stripe api SENDGRID_KEY=//enter sendgrid_api node app.js",
+    "start": "nodemon app.js",
     "start-server": "node app.js",
     "start:dev": "nodemon app.js"
   },
@@ -18,18 +18,23 @@
     "nodemon": "^2.0.2"
   },
   "dependencies": {
+    "aws-sdk": "^2.814.0",
+    "axios": "^0.21.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "compression": "^1.7.4",
     "connect-flash": "^0.1.1",
     "connect-mongodb-session": "^2.3.1",
     "csurf": "^1.11.0",
+    "dotenv": "^8.2.0",
     "ejs": "^3.0.1",
     "express": "^4.17.1",
     "express-handlebars": "^3.0.2",
     "express-session": "^1.17.1",
     "express-validator": "^6.4.0",
     "helmet": "^3.22.0",
+    "json-2-csv": "^3.10.0",
+    "moment": "^2.29.1",
     "mongodb": "^3.5.6",
     "mongoose": "^5.9.9",
     "morgan": "^1.10.0",
