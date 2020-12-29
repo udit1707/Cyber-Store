@@ -7,7 +7,7 @@ This Online-Retail website offers one-stop-All solution for resellers and consum
 - Nodejs,FlaskAPI,MongoDB,ClearDB(Mysql),SQLAlchemy
 
 ### Frontend
-- HTML,CSS
+- HTML,CSS,JS
 
 ## CLOUD
 - AWS' Simple Storage Service
