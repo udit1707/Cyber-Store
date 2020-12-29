@@ -4,3 +4,4 @@ access.log
 server.cert
 serverkey
 Procfile
+.env
