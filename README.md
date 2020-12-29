@@ -11,6 +11,7 @@ This Online-Retail website offers one-stop-All solution for resellers and consum
 
 ## CLOUD
 - AWS' Simple Storage Service
+- Heroku Deployment
 
 ## Landing
 
